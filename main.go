@@ -25,6 +25,17 @@ func main() {
 	certType := flag.String("type", "client", "client or server")
 	flag.Parse()
 
+	if Missing(caCrt, caKey) {
+		fmt.Printf("CA Cert missing, re-creating\n\n")
+		if err := GenerateCACertificate(
+			caCrt, caKey,
+			*org, "minica.example.com",
+			2048,
+		); err != nil {
+			panic(err)
+		}
+	}
+
 	isClientCert := false
 	switch *certType {
 	case "client":
@@ -47,17 +58,6 @@ Client Cert: %t
 Output crt:  %s
 Output key:  %s
 `, *commonName, *org, isClientCert, newCrt, newKey)
-
-	if Missing(caCrt, caKey) {
-		fmt.Printf("CA Cert missing, re-creating\n")
-		if err := GenerateCACertificate(
-			caCrt, caKey,
-			*org, "minica.example.com",
-			2048,
-		); err != nil {
-			panic(err)
-		}
-	}
 
 	if err := GenerateCert(
 		[]string{cn},
