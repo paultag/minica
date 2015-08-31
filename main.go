@@ -55,14 +55,14 @@ func main() {
 	newCrt := fmt.Sprintf("%s.crt", cn)
 	newKey := fmt.Sprintf("%s.key", cn)
 
-	fmt.Printf(`Creating a client cert:
+	fmt.Printf(`Creating a %s cert:
 
 Common Name: %s
 Org:         %s
 Cert Flavor: %s
 Output crt:  %s
 Output key:  %s
-`, *commonName, *org, *certType, newCrt, newKey)
+`, *certType, *commonName, *org, *certType, newCrt, newKey)
 
 	if err := GenerateCert(
 		[]string{cn},
