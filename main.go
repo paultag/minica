@@ -20,9 +20,8 @@ func main() {
 	caKey := "cacert.key"
 	/* If doesn't exist, create the CA  */
 
-	org := "Paul Tagliamonte"
-
 	commonName := flag.String("common-name", "", "CN of the cert")
+	org := flag.String("org", "Widgets, Inc", "Org of the cert")
 	certType := flag.String("type", "client", "client or server")
 	flag.Parse()
 
@@ -36,25 +35,34 @@ func main() {
 		panic(fmt.Errorf("Unknown type"))
 	}
 
+	cn := *commonName
+	newCrt := fmt.Sprintf("%s.crt", cn)
+	newKey := fmt.Sprintf("%s.key", cn)
+
+	fmt.Printf(`Creating a client cert:
+
+Common Name: %s
+Org:         %s
+Client Cert: %t
+Output crt:  %s
+Output key:  %s
+`, *commonName, *org, isClientCert, newCrt, newKey)
+
 	if Missing(caCrt, caKey) {
+		fmt.Printf("CA Cert missing, re-creating\n")
 		if err := GenerateCACertificate(
 			caCrt, caKey,
-			"Example Inc", "example.com",
+			*org, "minica.example.com",
 			2048,
 		); err != nil {
 			panic(err)
 		}
 	}
 
-	cn := *commonName
-
-	newCrt := fmt.Sprintf("%s.crt", cn)
-	newKey := fmt.Sprintf("%s.key", cn)
-
 	if err := GenerateCert(
 		[]string{cn},
 		newCrt, newKey, caCrt, caKey,
-		org, cn,
+		*org, cn,
 		2048,
 		isClientCert,
 	); err != nil {
