@@ -89,13 +89,13 @@ func GenerateCACertificate(certFile, keyFile, org, name string, bits int) error 
 // certificate authority files and stores the result in the certificate
 // file and key provided.  The provided host names are set to the
 // appropriate certificate fields.
-func GenerateCert(hosts []string, certFile, keyFile, caFile, caKeyFile, org, name string, bits int) error {
+func GenerateCert(hosts []string, certFile, keyFile, caFile, caKeyFile, org, name string, bits int, isClientCert bool) error {
 	template, err := newCertificate(org, name)
 	if err != nil {
 		return err
 	}
 	// client
-	if len(hosts) == 1 && hosts[0] == "" {
+	if isClientCert {
 		template.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}
 		template.KeyUsage = x509.KeyUsageDigitalSignature
 	} else { // server
