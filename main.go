@@ -25,6 +25,11 @@ func main() {
 	certType := flag.String("type", "client", "client or server")
 	flag.Parse()
 
+	if *commonName == "" {
+		flag.Usage()
+		return
+	}
+
 	if Missing(caCrt, caKey) {
 		fmt.Printf("CA Cert missing, re-creating\n\n")
 		if err := GenerateCACertificate(
