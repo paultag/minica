@@ -59,10 +59,10 @@ func main() {
 
 Common Name: %s
 Org:         %s
-Client Cert: %t
+Cert Flavor: %s
 Output crt:  %s
 Output key:  %s
-`, *commonName, *org, isClientCert, newCrt, newKey)
+`, *commonName, *org, *certType, newCrt, newKey)
 
 	if err := GenerateCert(
 		[]string{cn},
