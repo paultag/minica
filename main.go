@@ -64,7 +64,16 @@ func main() {
 	case "server":
 		isClientCert = false
 	default:
-		panic(fmt.Errorf("Unknown type"))
+		fmt.Printf(`Unknown cert type!
+
+Currently supported types:
+
+	client
+	server
+
+`)
+		flags.Usage()
+		os.Exit(2)
 	}
 
 	cn := conf.CommonName
