@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	"pault.ag/go/config"
 )
 
 func Missing(paths ...string) bool {
@@ -15,34 +17,44 @@ func Missing(paths ...string) bool {
 	return false
 }
 
+type MiniCA struct {
+	KeySize      int    `flag:"key-size"       description:"Key Size"`
+	CommonName   string `flag:"common-name"    description:"Common Name of the Cert"`
+	Org          string `flag:"conf.Org"       description:"Organization of the Cert"`
+	Type         string `flag:"type"           description:"Cert Type (client or server)"`
+	CaCommonName string `flag:"ca-common-name" description:"Common Name of the CA Cert"`
+	CaCert       string `flag:"ca-cert"        description:"Path to the CA Cert"`
+	CaKey        string `flag:"ca-key"         description:"Path to the CA Key"`
+	CaKeySize    int    `flag:"ca-key-size"    description:"CA Key Size"`
+}
+
 func main() {
-	caCrt := "cacert.crt"
-	caKey := "cacert.key"
-	/* If doesn't exist, create the CA  */
 
-	commonName := flag.String("common-name", "", "CN of the cert")
-	org := flag.String("org", "Widgets, Inc", "Org of the cert")
-	certType := flag.String("type", "client", "client or server")
-	flag.Parse()
+	conf := MiniCA{}
+	flags, err := config.LoadFlags("minica", &conf)
+	if err != nil {
+		panic(err)
+	}
 
-	if *commonName == "" {
+	flags.Parse(os.Args[1:])
+
+	if conf.CommonName == "" {
 		flag.Usage()
 		return
 	}
 
-	if Missing(caCrt, caKey) {
-		fmt.Printf("CA Cert missing, re-creating\n\n")
+	if Missing(conf.CaCert, conf.CaKey) {
 		if err := GenerateCACertificate(
-			caCrt, caKey,
-			*org, "minica.example.com",
-			2048,
+			conf.CaCert, conf.CaKey,
+			conf.Org, conf.CaCommonName,
+			conf.CaKeySize,
 		); err != nil {
 			panic(err)
 		}
 	}
 
 	isClientCert := false
-	switch *certType {
+	switch conf.Type {
 	case "client":
 		isClientCert = true
 	case "server":
@@ -51,7 +63,7 @@ func main() {
 		panic(fmt.Errorf("Unknown type"))
 	}
 
-	cn := *commonName
+	cn := conf.CommonName
 	newCrt := fmt.Sprintf("%s.crt", cn)
 	newKey := fmt.Sprintf("%s.key", cn)
 
@@ -62,13 +74,13 @@ Org:         %s
 Cert Flavor: %s
 Output crt:  %s
 Output key:  %s
-`, *certType, *commonName, *org, *certType, newCrt, newKey)
+`, conf.Type, conf.CommonName, conf.Org, conf.Type, newCrt, newKey)
 
 	if err := GenerateCert(
 		[]string{cn},
-		newCrt, newKey, caCrt, caKey,
-		*org, cn,
-		2048,
+		newCrt, newKey, conf.CaCert, conf.CaKey,
+		conf.Org, cn,
+		conf.KeySize,
 		isClientCert,
 	); err != nil {
 		panic(err)
