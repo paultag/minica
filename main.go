@@ -17,6 +17,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"pault.ag/go/config"
 )
@@ -32,9 +33,8 @@ func Missing(paths ...string) bool {
 
 type MiniCA struct {
 	KeySize      int    `flag:"key-size"       description:"Key Size"`
-	CommonName   string `flag:"common-name"    description:"Common Name of the Cert"`
 	Org          string `flag:"org"            description:"Organization of the Cert"`
-	Type         string `flag:"type"           description:"Cert Type (client or server)"`
+	Type         string `flag:"type"           description:"Cert Type"`
 	CaCommonName string `flag:"ca-common-name" description:"Common Name of the CA Cert"`
 	CaCert       string `flag:"ca-cert"        description:"Path to the CA Cert"`
 	CaKey        string `flag:"ca-key"         description:"Path to the CA Key"`
@@ -43,6 +43,7 @@ type MiniCA struct {
 
 func main() {
 	conf := MiniCA{
+		Type:      "auto",
 		Org:       "Example Organization",
 		KeySize:   2048,
 		CaCert:    "cacert.crt",
@@ -56,11 +57,6 @@ func main() {
 
 	flags.Parse(os.Args[1:])
 
-	if conf.CommonName == "" {
-		flags.Usage()
-		return
-	}
-
 	if Missing(conf.CaCert, conf.CaKey) {
 		if err := GenerateCACertificate(
 			conf.CaCert, conf.CaKey,
@@ -71,46 +67,56 @@ func main() {
 		}
 	}
 
-	isClientCert := false
-	switch conf.Type {
-	case "client":
-		isClientCert = true
-	case "server":
-		isClientCert = false
-	default:
-		fmt.Printf(`Unknown cert type!
+	if len(flags.Args()) == 0 {
+		flags.Usage()
+		return
+	}
+
+	var isClientCert bool
+	for _, cn := range flags.Args() {
+		switch conf.Type {
+		case "client":
+			isClientCert = true
+		case "server":
+			isClientCert = false
+		case "auto":
+			isClientCert = strings.Contains(cn, "@")
+		default:
+			fmt.Printf(`Unknown cert type!
 
 Currently supported types:
 
 	client
 	server
+	auto     (guess based on @ in CommonName)
 
 `)
-		flags.Usage()
-		os.Exit(2)
-	}
+			flags.Usage()
+			os.Exit(2)
+		}
 
-	cn := conf.CommonName
-	newCrt := fmt.Sprintf("%s.crt", cn)
-	newKey := fmt.Sprintf("%s.key", cn)
+		newCrt := fmt.Sprintf("%s.crt", cn)
+		newKey := fmt.Sprintf("%s.key", cn)
 
-	fmt.Printf(`Creating a %s cert:
+		fmt.Printf(`Creating a %s cert:
 
+Client Cert: %t
 Common Name: %s
 Org:         %s
 Cert Flavor: %s
 Output crt:  %s
 Output key:  %s
-`, conf.Type, conf.CommonName, conf.Org, conf.Type, newCrt, newKey)
+`, conf.Type, isClientCert, cn, conf.Org, conf.Type, newCrt, newKey)
 
-	if err := GenerateCert(
-		[]string{cn},
-		newCrt, newKey, conf.CaCert, conf.CaKey,
-		conf.Org, cn,
-		conf.KeySize,
-		isClientCert,
-	); err != nil {
-		panic(err)
+		if err := GenerateCert(
+			[]string{cn},
+			newCrt, newKey, conf.CaCert, conf.CaKey,
+			conf.Org, cn,
+			conf.KeySize,
+			isClientCert,
+		); err != nil {
+			panic(err)
+		}
 	}
 }
 
