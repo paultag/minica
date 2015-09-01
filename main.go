@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
@@ -29,8 +28,13 @@ type MiniCA struct {
 }
 
 func main() {
-
-	conf := MiniCA{}
+	conf := MiniCA{
+		Org:       "Example Organization",
+		KeySize:   2048,
+		CaCert:    "cacert.crt",
+		CaKey:     "cakey.key",
+		CaKeySize: 2048,
+	}
 	flags, err := config.LoadFlags("minica", &conf)
 	if err != nil {
 		panic(err)
@@ -39,7 +43,7 @@ func main() {
 	flags.Parse(os.Args[1:])
 
 	if conf.CommonName == "" {
-		flag.Usage()
+		flags.Usage()
 		return
 	}
 
