@@ -33,7 +33,7 @@ func Missing(paths ...string) bool {
 type MiniCA struct {
 	KeySize      int    `flag:"key-size"       description:"Key Size"`
 	CommonName   string `flag:"common-name"    description:"Common Name of the Cert"`
-	Org          string `flag:"conf.Org"       description:"Organization of the Cert"`
+	Org          string `flag:"org"            description:"Organization of the Cert"`
 	Type         string `flag:"type"           description:"Cert Type (client or server)"`
 	CaCommonName string `flag:"ca-common-name" description:"Common Name of the CA Cert"`
 	CaCert       string `flag:"ca-cert"        description:"Path to the CA Cert"`
