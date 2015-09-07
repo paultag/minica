@@ -57,6 +57,11 @@ func main() {
 
 	flags.Parse(os.Args[1:])
 
+	if len(flags.Args()) == 0 {
+		flags.Usage()
+		return
+	}
+
 	if Missing(conf.CaCert, conf.CaKey) {
 		if err := GenerateCACertificate(
 			conf.CaCert, conf.CaKey,
@@ -65,11 +70,6 @@ func main() {
 		); err != nil {
 			panic(err)
 		}
-	}
-
-	if len(flags.Args()) == 0 {
-		flags.Usage()
-		return
 	}
 
 	var isClientCert bool
